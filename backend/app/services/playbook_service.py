@@ -2,23 +2,38 @@ import os
 import subprocess
 import json
 from app.models.playbook import PlaybookModel
+from app.repositories.playbook_repository import PlaybookRepository
 
 class PlaybookService:
     def __init__(self, playbook_dir=None):
         self.playbook_dir = playbook_dir or os.path.abspath("playbooks")
+        self.repo = PlaybookRepository()
 
     def list_playbooks(self):
-        playbooks = []
-        try:
-            files = [
-                f for f in os.listdir(self.playbook_dir)
-                if f.endswith(".yml") or f.endswith(".yaml")
-            ]
-            for i, filename in enumerate(files, 1):
-                playbooks.append(PlaybookModel(id=i, name=filename, description=""))
-        except FileNotFoundError:
-            return playbooks
-        return playbooks
+        return self.repo.get_all()
+
+    def get_playbook(self, name):
+        return self.repo.get_by_name(name)
+
+    def add_playbook(self, name, description, filepath):
+        playbook = PlaybookModel(name=name, description=description, filepath=filepath)
+        return self.repo.add(playbook)
+
+    def delete_playbook(self, name):
+        playbook = self.get_playbook(name)
+        if playbook:
+            self.repo.delete(playbook)
+            return True
+        return False
+
+    def update_playbook(self, name, **kwargs):
+        playbook = self.get_playbook(name)
+        if not playbook:
+            return None
+        for key, value in kwargs.items():
+            setattr(playbook, key, value)
+        self.repo.update()
+        return playbook
 
     def run_playbook(self, playbook_name, extra_vars):
         playbook_path = os.path.join(self.playbook_dir, playbook_name)

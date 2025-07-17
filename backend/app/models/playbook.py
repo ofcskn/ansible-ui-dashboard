@@ -1,10 +1,9 @@
-from dataclasses import dataclass, asdict
+from app.extensions import db
+from .base import BaseModel
 
-@dataclass
-class PlaybookModel:
-    id: int
-    name: str
-    description: str
+class PlaybookModel(BaseModel):
+    __tablename__ = "playbooks"
 
-    def to_dict(self):
-        return asdict(self)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    description = db.Column(db.Text)
+    filepath = db.Column(db.String(200), nullable=False)
