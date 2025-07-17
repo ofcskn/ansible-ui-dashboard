@@ -1,0 +1,6 @@
+- name: Test playbook
+  hosts: localhost
+  tasks:
+    - name: Print a message
+      debug:
+        msg: "Merhaba {{ name }}"
