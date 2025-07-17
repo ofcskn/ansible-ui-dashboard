@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from app.routes.playbooks import playbooks_bp
+from app.routes.playbooks_routes import playbooks_bp
 
 def create_app():
     app = Flask(__name__)
