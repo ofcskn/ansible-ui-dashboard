@@ -14,20 +14,21 @@ class PlaybookService:
 
     def get_playbook(self, name):
         return self.repo.get_by_name(name)
+    
+    def get_by_id(self, id):
+        return self.repo.get_by_id(id)
 
     def add_playbook(self, name, description, filepath):
         playbook = PlaybookModel(name=name, description=description, filepath=filepath)
         return self.repo.add(playbook)
 
-    def delete_playbook(self, name):
-        playbook = self.get_playbook(name)
+    def delete_playbook(self, playbook):
         if playbook:
             self.repo.delete(playbook)
             return True
         return False
 
-    def update_playbook(self, name, **kwargs):
-        playbook = self.get_playbook(name)
+    def update_playbook(self, playbook, **kwargs):
         if not playbook:
             return None
         for key, value in kwargs.items():
