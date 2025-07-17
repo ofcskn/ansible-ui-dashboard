@@ -11,7 +11,13 @@ import { PlaybookService } from '../../../core/services/playbook.service';
   styleUrl: './playbook-list.scss',
 })
 export class PlaybookList {
-  displayedColumns: string[] = ['id', 'title', 'description', 'actions'];
+  displayedColumns: string[] = [
+    'id',
+    'name',
+    'description',
+    'filepath',
+    'actions',
+  ];
   playbooks: Playbook[] = [];
   loading = true;
 
