@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { Playbook } from '../../../core/models/playbook.model';
 import { MatTableModule } from '@angular/material/table';
 import { RouterModule } from '@angular/router';
+import { PlaybookService } from '../../../core/services/playbook.service';
 
 @Component({
   selector: 'app-playbook-list',
@@ -11,9 +12,25 @@ import { RouterModule } from '@angular/router';
 })
 export class PlaybookList {
   displayedColumns: string[] = ['id', 'title', 'description', 'actions'];
+  playbooks: Playbook[] = [];
+  loading = true;
 
-  playbooks: Playbook[] = [
-    { id: 1, name: 'Playbook One', description: 'Description of playbook one' },
-    { id: 2, name: 'Playbook Two', description: 'Description of playbook two' },
-  ];
+  constructor(
+    private playbookService: PlaybookService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.playbookService.list().subscribe({
+      next: (response) => {
+        this.playbooks = response.data;
+        this.cdr.detectChanges();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Failed to fetch playbooks', err);
+        this.loading = false;
+      },
+    });
+  }
 }
