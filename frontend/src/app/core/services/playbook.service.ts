@@ -11,10 +11,28 @@ export class PlaybookService {
 
   constructor(private http: HttpClient) {}
 
+  getById(id: string | number): Observable<{ data: Playbook }> {
+    return this.http.get<{ data: Playbook }>(`${this.baseUrl}/get/${id}`);
+  }
+
+  create(playbook: Playbook): Observable<any> {
+    return this.http.post(`${this.baseUrl}/manage`, playbook);
+  }
+
+  update(id: string | number, playbook: Playbook): Observable<any> {
+    const payload = { ...playbook, id };
+    return this.http.post(`${this.baseUrl}/manage`, payload);
+  }
+
   list(): Observable<ApiResponse<Playbook[]>> {
     return this.http.get<ApiResponse<Playbook[]>>(`${this.baseUrl}/list`);
   }
 
+  getContentById(id: string): Observable<ApiResponse<string>> {
+    return this.http.get<ApiResponse<string>>(
+      `${environment.API_URL}/playbooks/yaml/get/${id}`
+    );
+  }
   run(playbookId: string): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.baseUrl}/run`, {
       playbook: playbookId,

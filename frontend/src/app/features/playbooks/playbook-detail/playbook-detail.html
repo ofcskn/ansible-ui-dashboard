@@ -1,1 +1,104 @@
-<p>playbook-detail works!</p>
+<h1 class="col-sm-12 text-center">Playbook</h1>
+<div *ngIf="loading" class="loading mat-body-1">Loading...</div>
+
+<div *ngIf="error" class="error mat-body-1 text-warn">
+  {{ error }}
+</div>
+
+<form
+  (ngSubmit)="save()"
+  #playbookForm="ngForm"
+  class="mat-elevation-z2"
+  style="padding: 1rem; max-width: 800px; margin: auto"
+>
+  <div class="row">
+    <!-- Name -->
+    <mat-form-field appearance="fill" class="col-sm-12">
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        id="name"
+        name="name"
+        [(ngModel)]="playbook.name"
+        required
+        #name="ngModel"
+      />
+      <mat-error *ngIf="name.invalid && name.touched">
+        Name is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field appearance="fill" class="col-sm-12">
+      <mat-label>Description</mat-label>
+      <textarea
+        matInput
+        id="description"
+        name="description"
+        [(ngModel)]="playbook.description"
+        required
+        #description="ngModel"
+      ></textarea>
+      <mat-error *ngIf="description.invalid && description.touched">
+        Description is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- File Path -->
+    <mat-form-field appearance="fill" class="col-sm-12">
+      <mat-label>File Path</mat-label>
+      <input
+        matInput
+        id="filepath"
+        name="filepath"
+        [(ngModel)]="playbook.filepath"
+        required
+        #filepath="ngModel"
+      />
+      <mat-error *ngIf="filepath.invalid && filepath.touched">
+        Filepath is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- YAML Content -->
+    <mat-form-field appearance="fill" class="col-sm-12">
+      <mat-label>Playbook YAML Content</mat-label>
+      <textarea
+        matInput
+        id="content"
+        name="content"
+        rows="15"
+        [(ngModel)]="playbook.content"
+        required
+        #content="ngModel"
+      ></textarea>
+      <mat-error *ngIf="content.invalid && content.touched">
+        YAML content is required.
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Action Buttons -->
+    <div class="row">
+      <button
+        class="col-sm-6"
+        mat-raised-button
+        color="primary"
+        type="submit"
+        [disabled]="loading || playbookForm.invalid"
+      >
+        {{ isNew ? "Create" : "Update" }}
+      </button>
+
+      <button
+        class="col-sm-6"
+        mat-button
+        color="warn"
+        type="button"
+        (click)="router.navigate(['/playbooks'])"
+        [disabled]="loading"
+      >
+        Cancel
+      </button>
+    </div>
+  </div>
+</form>
