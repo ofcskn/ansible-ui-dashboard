@@ -63,12 +63,19 @@ export class PlaybookList {
           this.cdr.markForCheck();
         });
       },
-      error: () => {
+      error: (error) => {
         this.zone.run(() => {
-          this.dialog.open(PlaybookOutputDialog, {
-            data: { playbookId, error: true },
-            width: '700px',
-          });
+          if (error.status === 409) {
+            this.dialog.open(PlaybookOutputDialog, {
+              data: { playbookId, alreadyRunning: true },
+              width: '700px',
+            });
+          } else {
+            this.dialog.open(PlaybookOutputDialog, {
+              data: { playbookId, error: true },
+              width: '700px',
+            });
+          }
 
           this.loadingPlaybookId = null;
           this.cdr.markForCheck();

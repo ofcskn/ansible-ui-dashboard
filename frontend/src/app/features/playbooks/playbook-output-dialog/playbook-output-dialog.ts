@@ -26,7 +26,6 @@ export class PlaybookOutputDialog implements OnInit {
 
   ngOnInit(): void {
     if (this.data.error) {
-      this.logs.push('Error running playbook.');
       return;
     }
 

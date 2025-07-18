@@ -37,9 +37,11 @@ def execute_playbook():
     playbook = service.get_by_id(playbook_id)
     if not playbook:
         return jsonify(APIResponseSchema(False, "Playbook not found", 404).to_dict()), 404
-    
 
-    if redis_client.get(f"playbook:{str(playbook.id)}:running") == b"running":
+    lock_key = f"playbook:{playbook.id}:running"
+    lock_acquired = redis_client.set(lock_key, "running", nx=True, ex=1800)
+
+    if not lock_acquired:
         return jsonify(APIResponseSchema(False, "Playbook is already running", 409).to_dict()), 409
 
     def background_runner():
@@ -47,19 +49,18 @@ def execute_playbook():
             socketio.emit("playbook_log", {"log": "Playbook started...", "id": playbook.id})
 
             for line in service.stream_playbook_logs(playbook, extra_vars):
-                print(line)
                 socketio.emit("playbook_log", {"log": line, "id": playbook.id})
 
             socketio.emit("playbook_done", {"message": "Playbook finished", "id": playbook.id})
         except Exception as e:
-            print("error", e)
             socketio.emit("playbook_error", {"message": str(e), "id": playbook.id})
+        finally:
+            redis_client.delete(lock_key)
 
     thread = Thread(target=background_runner)
     thread.start()
 
     return jsonify(APIResponseSchema(True, "Playbook is running", code=202).to_dict())
-
 
 @playbooks_bp.route("/manage", methods=["POST"])
 def manage_playbook():
