@@ -8,6 +8,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { PlaybookOutputDialog } from '../playbook-output-dialog/playbook-output-dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Socket } from 'ngx-socket-io';
 
 @Component({
   selector: 'app-playbook-list',
@@ -38,6 +39,7 @@ export class PlaybookList {
   loadingPlaybookId: number | null = null;
 
   constructor(
+    private socket: Socket,
     private playbookService: PlaybookService,
     private cdr: ChangeDetectorRef,
     private dialog: MatDialog,
@@ -50,29 +52,26 @@ export class PlaybookList {
     this.loadingPlaybookId = playbookId;
 
     this.playbookService.run(playbookId).subscribe({
-      next: (res) => {
+      next: () => {
         this.zone.run(() => {
           this.dialog.open(PlaybookOutputDialog, {
-            data: {
-              output: res?.data?.stdout || res?.data?.stderr || 'No output',
-            },
+            data: { playbookId },
             width: '700px',
           });
-          setTimeout(() => {
-            this.loadingPlaybookId = null;
-            this.cdr.markForCheck();
-          });
+
+          this.loadingPlaybookId = null;
+          this.cdr.markForCheck();
         });
       },
       error: () => {
         this.zone.run(() => {
           this.dialog.open(PlaybookOutputDialog, {
-            data: { output: 'Error running playbook.' },
+            data: { playbookId, error: true },
+            width: '700px',
           });
-          setTimeout(() => {
-            this.loadingPlaybookId = null;
-            this.cdr.markForCheck();
-          });
+
+          this.loadingPlaybookId = null;
+          this.cdr.markForCheck();
         });
       },
     });
