@@ -33,9 +33,9 @@ export class PlaybookService {
       `${environment.API_URL}/playbooks/yaml/get/${id}`
     );
   }
-  run(playbookId: string): Observable<ApiResponse<any>> {
+  run(playbookId: number): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.baseUrl}/run`, {
-      playbook: playbookId,
+      playbook_id: playbookId,
     });
   }
 }

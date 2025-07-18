@@ -18,7 +18,26 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef>Actions</th>
     <td mat-cell *matCellDef="let playbook">
-      <a [routerLink]="['/playbooks', playbook.id]">View</a>
+      <a class="btn btn-info me-2" [routerLink]="['/playbooks', playbook.id]"
+        >View</a
+      >
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="runPlaybook(playbook.id)"
+        [disabled]="loadingPlaybookId === playbook.id"
+        style="position: relative; display: inline-flex; align-items: center"
+      >
+        <mat-progress-spinner
+          *ngIf="loadingPlaybookId === playbook.id"
+          mode="indeterminate"
+          diameter="20"
+          strokeWidth="3"
+          style="margin-right: 8px"
+        ></mat-progress-spinner>
+
+        {{ loadingPlaybookId === playbook.id ? "Running..." : "Run" }}
+      </button>
     </td>
   </ng-container>
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
