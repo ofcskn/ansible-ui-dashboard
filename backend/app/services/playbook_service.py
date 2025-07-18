@@ -12,10 +12,10 @@ class PlaybookService:
     def list_playbooks(self):
         return self.repo.get_all()
 
-    def get_playbook(self, name):
+    def get_playbook(self, name) -> PlaybookModel:
         return self.repo.get_by_name(name)
     
-    def get_by_id(self, id):
+    def get_by_id(self, id) -> PlaybookModel:
         return self.repo.get_by_id(id)
 
     def add_playbook(self, name, description, filepath):

@@ -1,6 +1,7 @@
+import os
 from app.schemas.api_response_schema import APIResponseSchema
 from app.services.playbook_service import PlaybookService
-from app.helpers.yaml_helpers import remove_playbook_file, save_playbook_file
+from app.helpers.yaml_helpers import is_valid_yaml, remove_old_playbook_file, remove_playbook_file, save_playbook_file
 from app.constants import PLAYBOOKS_DIR
 from flask import Blueprint, jsonify, request
 
@@ -8,10 +9,18 @@ playbooks_bp = Blueprint("playbooks", __name__, url_prefix="/playbooks")
 service = PlaybookService()
 
 @playbooks_bp.route("/list", methods=["GET"])
-def get_playbooks():
+def fetch_playbooks():
     playbooks = service.list_playbooks()
     playbooks_data = [playbook.to_dict() for playbook in playbooks]
-    response = APIResponseSchema(success=True, message="Playbooks fetched", data=playbooks_data, code=200)
+    response = APIResponseSchema(success=True, message="Playbooks are fetched", data=playbooks_data, code=200)
+    return jsonify(response.to_dict())
+
+@playbooks_bp.route("/get/<int:id>", methods=["GET"])
+def get_playbook(id):
+    playbook = service.get_by_id(id)
+    if not playbook:
+        response = APIResponseSchema(success=False, message="Playbook is not found.", code=404)
+    response = APIResponseSchema(success=True, message="Playbook is fetched", data=playbook.to_dict(), code=200)
     return jsonify(response.to_dict())
 
 @playbooks_bp.route("/run", methods=["POST"])
@@ -36,7 +45,6 @@ def manage_playbook():
     description = data.get("description")
     filepath = data.get("filepath")
     content = data.get("content")  # YAML content as string
-
     if not playbook_id:
         # Adding new requires name, description, filepath and content
         if not name or not description or not filepath or not content:
@@ -54,16 +62,24 @@ def manage_playbook():
 
     else:
         playbook = service.get_by_id(playbook_id)
+        old_filepath = playbook.filepath
         if not playbook:
             response = APIResponseSchema(success=False, message="Playbook not found", code=404)
             return jsonify(response.to_dict()), 404
-
+        
         if name:
             playbook.name = name
         if description:
             playbook.description = description
 
         if filepath and content:
+            is_valid, error = is_valid_yaml(filepath, content)
+            if not is_valid:
+                response = APIResponseSchema(success=False, message=error, code=400)
+                return jsonify(response.to_dict()), 400
+            
+            remove_old_playbook_file(old_filepath,filepath)
+
             success, error = save_playbook_file(filepath, content)
             if not success:
                 response = APIResponseSchema(success=False, message=error, code=500)
@@ -74,6 +90,23 @@ def manage_playbook():
         response = APIResponseSchema(success=True, message="Playbook updated successfully", data=playbook.to_dict(), code=200)
         return jsonify(response.to_dict()), 200
 
+@playbooks_bp.route("/yaml/get/<int:id>", methods=["GET"])
+def get_content_of_file(id):
+    playbook = service.get_by_id(id)
+    if not playbook:
+        response = APIResponseSchema(success=False, message="Playbook not found", code=404)
+        return jsonify(response.to_dict()), 200
+
+    full_path = os.path.join(PLAYBOOKS_DIR, playbook.filepath)
+    yaml_content = ""
+    try:
+        with open(full_path, 'r', encoding='utf-8') as f:
+            yaml_content = f.read()
+    except Exception:
+        yaml_content = None 
+
+    response =  APIResponseSchema(success=True, message="Playbook updated successfully", data=yaml_content, code=200)
+    return jsonify(response.to_dict()), 200
 
 @playbooks_bp.route("/delete", methods=["DELETE"])
 def delete_playbook():
@@ -95,8 +128,9 @@ def delete_playbook():
     filepath = playbook.filepath
     result = remove_playbook_file(filepath)
     if not result.get("success"):
-        return APIResponseSchema(success=False, message=f"Error deleting playbook file: {str(result.get('error'))}", code=500)
-
+        response = APIResponseSchema(success=False, message=f"Error deleting playbook file: {str(result.get('error'))}", code=500)
+        return jsonify(response.to_dict()), 500
+        
     # Delete playbook record from DB
     service.delete_playbook(playbook)
 
