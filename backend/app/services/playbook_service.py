@@ -3,10 +3,12 @@ import subprocess
 import json
 from app.models.playbook import PlaybookModel
 from app.repositories.playbook_repository import PlaybookRepository
+from app.constants import PLAYBOOKS_DIR
+from app.extensions import redis_client
 
 class PlaybookService:
-    def __init__(self, playbook_dir=None):
-        self.playbook_dir = playbook_dir or os.path.abspath("playbooks")
+    def __init__(self, playbook_dir=PLAYBOOKS_DIR):
+        self.playbook_dir = playbook_dir
         self.repo = PlaybookRepository()
 
     def list_playbooks(self):
@@ -36,8 +38,9 @@ class PlaybookService:
         self.repo.update()
         return playbook
 
-    def run_playbook(self, playbook_name, extra_vars):
-        playbook_path = os.path.join(self.playbook_dir, playbook_name)
+    def run_playbook(self, playbook:PlaybookModel, extra_vars):
+        redis_client.set(f"playbook:{playbook.id}:running", "running", ex=1800)
+        playbook_path = os.path.join(self.playbook_dir, playbook.filepath)
 
         if not os.path.exists(playbook_path):
             return {"error": "Playbook not found"}
@@ -63,3 +66,5 @@ class PlaybookService:
 
         except Exception as e:
             return {"error": str(e)}
+        finally:
+            redis_client.delete(f"playbook:{str(playbook.id)}:running")

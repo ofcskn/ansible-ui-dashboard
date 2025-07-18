@@ -4,6 +4,7 @@ from app.services.playbook_service import PlaybookService
 from app.helpers.yaml_helpers import is_valid_yaml, remove_old_playbook_file, remove_playbook_file, save_playbook_file
 from app.constants import PLAYBOOKS_DIR
 from flask import Blueprint, jsonify, request
+from app.extensions import redis_client
 
 playbooks_bp = Blueprint("playbooks", __name__, url_prefix="/playbooks")
 service = PlaybookService()
@@ -26,14 +27,23 @@ def get_playbook(id):
 @playbooks_bp.route("/run", methods=["POST"])
 def execute_playbook():
     data = request.get_json() or {}
-    playbook_name = data.get("playbook")
+    playbook_id = data.get("playbook_id")
     extra_vars = data.get("params", {})
 
-    if not playbook_name:
-        response = APIResponseSchema(success=False, message="Playbook name is required", code=400)
+    if not playbook_id:
+        response = APIResponseSchema(success=False, message="Playbook ID is required", code=400)
         return jsonify(response.to_dict()), 400
+    
+    playbook = service.get_by_id(playbook_id)
+    if not playbook:
+        response = APIResponseSchema(success=False, message="Playbook is not found", code=404)
+        return jsonify(response.to_dict()), 400
+    
+    if redis_client.get(f"playbook:{str(playbook.id)}:running") == "running":
+        response = APIResponseSchema(success=False, message="Playbook is already running", code=409)
+        return jsonify(response.to_dict())
 
-    result = service.run_playbook(playbook_name, extra_vars)
+    result = service.run_playbook(playbook, extra_vars)
     response = APIResponseSchema(success=True, message="Playbook executed", data=result, code=200)
     return jsonify(response.to_dict())
 
