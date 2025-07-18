@@ -68,3 +68,19 @@ class PlaybookService:
             return {"error": str(e)}
         finally:
             redis_client.delete(f"playbook:{str(playbook.id)}:running")
+
+    def stream_playbook_logs(self, playbook:PlaybookModel, extra_vars):
+        playbook_path = os.path.join(self.playbook_dir, playbook.filepath)
+
+        process = subprocess.Popen(
+            ["ansible-playbook", playbook_path, "-e", json.dumps(extra_vars)],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True
+        )
+
+        for line in iter(process.stdout.readline, ''):
+            yield line.strip()
+
+        process.stdout.close()
+        process.wait()

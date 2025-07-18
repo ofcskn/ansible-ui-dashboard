@@ -1,10 +1,11 @@
 import os
+from threading import Thread
 from app.schemas.api_response_schema import APIResponseSchema
 from app.services.playbook_service import PlaybookService
 from app.helpers.yaml_helpers import is_valid_yaml, remove_old_playbook_file, remove_playbook_file, save_playbook_file
 from app.constants import PLAYBOOKS_DIR
 from flask import Blueprint, jsonify, request
-from app.extensions import redis_client
+from app.extensions import redis_client, socketio
 
 playbooks_bp = Blueprint("playbooks", __name__, url_prefix="/playbooks")
 service = PlaybookService()
@@ -31,21 +32,34 @@ def execute_playbook():
     extra_vars = data.get("params", {})
 
     if not playbook_id:
-        response = APIResponseSchema(success=False, message="Playbook ID is required", code=400)
-        return jsonify(response.to_dict()), 400
-    
+        return jsonify(APIResponseSchema(False, "Playbook ID is required", 400).to_dict()), 400
+
     playbook = service.get_by_id(playbook_id)
     if not playbook:
-        response = APIResponseSchema(success=False, message="Playbook is not found", code=404)
-        return jsonify(response.to_dict()), 400
+        return jsonify(APIResponseSchema(False, "Playbook not found", 404).to_dict()), 404
     
-    if redis_client.get(f"playbook:{str(playbook.id)}:running") == "running":
-        response = APIResponseSchema(success=False, message="Playbook is already running", code=409)
-        return jsonify(response.to_dict())
 
-    result = service.run_playbook(playbook, extra_vars)
-    response = APIResponseSchema(success=True, message="Playbook executed", data=result, code=200)
-    return jsonify(response.to_dict())
+    if redis_client.get(f"playbook:{str(playbook.id)}:running") == b"running":
+        return jsonify(APIResponseSchema(False, "Playbook is already running", 409).to_dict()), 409
+
+    def background_runner():
+        try:
+            socketio.emit("playbook_log", {"log": "Playbook started...", "id": playbook.id})
+
+            for line in service.stream_playbook_logs(playbook, extra_vars):
+                print(line)
+                socketio.emit("playbook_log", {"log": line, "id": playbook.id})
+
+            socketio.emit("playbook_done", {"message": "Playbook finished", "id": playbook.id})
+        except Exception as e:
+            print("error", e)
+            socketio.emit("playbook_error", {"message": str(e), "id": playbook.id})
+
+    thread = Thread(target=background_runner)
+    thread.start()
+
+    return jsonify(APIResponseSchema(True, "Playbook is running", code=202).to_dict())
+
 
 @playbooks_bp.route("/manage", methods=["POST"])
 def manage_playbook():
