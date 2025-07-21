@@ -8,6 +8,13 @@ from flask import jsonify, Blueprint, request
 users_bp = Blueprint("users", __name__, url_prefix="/users")
 service = UserService()
 
+@users_bp.route("/list", methods=["GET"])
+def fetch_all():
+    data = service.list_users()
+    dicted_data = [item.to_dict() for item in data]
+    response = APIResponseSchema(success=True, message="Users are fetched", data=dicted_data, code=200)
+    return jsonify(response.to_dict())
+
 @users_bp.route("/me", methods=["GET"])
 @jwt_required()
 def get_current_user():
