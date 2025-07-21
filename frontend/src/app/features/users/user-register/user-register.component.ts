@@ -11,9 +11,9 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { UserService } from '../../../core/services/user.service';
-import { UserRegister } from '../../../core/models/user.model';
+import { UserRegisterDTO } from '../../../core/models/dto/userRegisterDTO.model';
 import { Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-register',
@@ -35,7 +35,7 @@ export class UserRegisterComponent {
 
   constructor(
     private fb: FormBuilder,
-    private _userService: UserService,
+    private _authService: AuthService,
     private router: Router,
     private ngZone: NgZone
   ) {}
@@ -54,14 +54,14 @@ export class UserRegisterComponent {
   onSubmit() {
     if (this.registerForm.valid) {
       const formValue = this.registerForm.value;
-      const newUser: UserRegister = {
+      const newUser: UserRegisterDTO = {
         name: formValue.name,
         email: formValue.email,
         username: formValue.username,
         password: formValue.password,
         confirmPassword: formValue.confirmPassword,
       };
-      this._userService.register(newUser).subscribe({
+      this._authService.register(newUser).subscribe({
         next: (response) => {
           this.router.navigate(['/users/login']);
         },

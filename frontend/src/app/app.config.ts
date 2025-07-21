@@ -12,15 +12,22 @@ import {
 } from '@angular/platform-browser';
 import { SocketIoConfig, provideSocketIo } from 'ngx-socket-io';
 
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  provideHttpClient,
+  withFetch,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { environment } from '../environments/environment';
+import { JwtInterceptor } from './core/utils/jwt.interceptor';
 
 const config: SocketIoConfig = { url: environment.API_URL, options: {} };
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideHttpClient(withFetch(), withInterceptorsFromDi()),
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
     provideSocketIo(config),
-    provideHttpClient(withFetch()),
     provideBrowserGlobalErrorListeners(),
     provideZonelessChangeDetection(),
     provideRouter(routes),

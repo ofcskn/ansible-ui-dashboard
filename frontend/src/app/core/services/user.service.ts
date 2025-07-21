@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { User, UserRegister } from '../models/user.model';
+import { User } from '../models/user.model';
 import { ApiResponse } from '../models/api-response.model';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -13,16 +13,6 @@ export class UserService {
 
   getById(id: string | number): Observable<{ data: User }> {
     return this.http.get<{ data: User }>(`${this.baseUrl}/get/${id}`);
-  }
-
-  register(user: UserRegister): Observable<any> {
-    const payload = { ...user };
-    return this.http.post(`${this.baseUrl}/register`, payload);
-  }
-
-  login(handle: string, password: string): Observable<any> {
-    const payload = { handle, password };
-    return this.http.post(`${this.baseUrl}/login`, payload);
   }
 
   update(id: string | number, user: User): Observable<any> {

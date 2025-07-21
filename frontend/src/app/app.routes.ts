@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AuthGuard } from './core/utils/auth.guard';
 
 export const routes: Routes = [
   {
@@ -7,6 +8,8 @@ export const routes: Routes = [
       import('./features/playbooks/playbooks-routing-module').then(
         (m) => m.PlaybooksRoutingModule
       ),
+    data: { roles: ['user', 'admin'] },
+    canActivate: [AuthGuard],
   },
   {
     path: 'users',
