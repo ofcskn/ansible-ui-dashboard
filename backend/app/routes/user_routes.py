@@ -66,15 +66,16 @@ def login():
             return APIResponseSchema(success=False, message=message, code=400).to_json()
         
         token = create_access_token(identity=str(user.id), additional_claims = {
-        "role": user.role,
-        "email": user.email,
-        "username": user.username,
-        "name": user.name,
-    })
+            "role": user.role,
+            "email": user.email,
+            "username": user.username,
+            "name": user.name,
+        })
         return APIResponseSchema(success=True, message=message, code=200, data={
             "token": token,
             "user": user.to_dict()
         }).to_json()
+    
     except Exception as e:
         return APIResponseSchema(success=False, message=f"Server error: {e}", code=500).to_json()
 

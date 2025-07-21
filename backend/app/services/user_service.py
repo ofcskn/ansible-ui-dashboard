@@ -33,7 +33,7 @@ class UserService:
         self.repo.add(user)
         return True, "User is added",user
     
-    def login(handle: str, password: str) -> Tuple[bool, str, Optional[UserModel]]:
+    def login(self, handle: str, password: str) -> Tuple[bool, str, Optional[UserModel]]:
         validators = [
             UserLoginValidator()
         ]
