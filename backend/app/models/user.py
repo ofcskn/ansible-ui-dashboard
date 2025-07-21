@@ -1,6 +1,7 @@
 from app.extensions import db
 from .base import BaseModel
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm import relationship
 
 class UserModel(BaseModel):
     __tablename__ = "users"
@@ -11,6 +12,8 @@ class UserModel(BaseModel):
     password_hash = db.Column(db.String(256), unique=False, nullable=False) 
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     role = db.Column(db.String(32), nullable=False, default="user") 
+
+    playbooks = relationship('PlaybookModel', back_populates='user', cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

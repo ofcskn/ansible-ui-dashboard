@@ -1,5 +1,7 @@
 import re
 
+from app.models.user import UserModel
+
 class Validator:
     def validate(self, data: dict) -> (bool, str):
         raise NotImplementedError()
@@ -25,6 +27,15 @@ class EmailValidator(Validator):
             return False, "Invalid email address."
         return True, ""
 
+class UserLoginValidator(Validator):
+    def validate(self, data):
+        handle = data.get("handle")
+        password = data.get("password")
+
+        if not handle or not password:
+            return False, "Handle and password are required."
+        return True, ""
+    
 class PasswordMatchValidator(Validator):
     def validate(self, data):
         if data.get("password") != data.get("confirmPassword"):
