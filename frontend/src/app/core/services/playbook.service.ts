@@ -38,4 +38,9 @@ export class PlaybookService {
       playbook_id: playbookId,
     });
   }
+  delete(playbookId: number): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/delete`, {
+      body: { id: playbookId },
+    });
+  }
 }

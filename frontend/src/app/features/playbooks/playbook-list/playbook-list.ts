@@ -37,6 +37,7 @@ export class PlaybookList {
   playbooks: Playbook[] = [];
   loading = true;
   loadingPlaybookId: number | null = null;
+  deletingPlaybookId: number | null = null;
 
   constructor(
     private socket: Socket,
@@ -80,6 +81,23 @@ export class PlaybookList {
           this.loadingPlaybookId = null;
           this.cdr.markForCheck();
         });
+      },
+    });
+  }
+
+  deletePlaybook(playbookId: number) {
+    if (this.deletingPlaybookId !== null) return;
+
+    this.deletingPlaybookId = playbookId;
+
+    this.playbookService.delete(playbookId).subscribe({
+      next: () => {
+        this.playbooks = this.playbooks.filter((p) => p.id !== playbookId);
+        this.deletingPlaybookId = null;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.log('error');
       },
     });
   }
