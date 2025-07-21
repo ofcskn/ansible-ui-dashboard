@@ -106,7 +106,7 @@ export class PlaybookList {
     this.playbookService.list().subscribe({
       next: (response) => {
         this.playbooks = response.data;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
         this.loading = false;
       },
       error: (err) => {

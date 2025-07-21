@@ -16,7 +16,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-user-login',
+  selector: 'auth-user-login',
   imports: [
     CommonModule,
     FormsModule,
@@ -26,10 +26,10 @@ import { Router } from '@angular/router';
     MatButtonModule,
     MatCardModule,
   ],
-  templateUrl: './user-login.component.html',
-  styleUrl: './user-login.component.scss',
+  templateUrl: './auth-login.component.html',
+  styleUrl: './auth-login.component.scss',
 })
-export class UserLoginComponent {
+export class AuthLoginComponent {
   loginForm!: FormGroup;
 
   constructor(
@@ -39,6 +39,12 @@ export class UserLoginComponent {
   ) {}
 
   ngOnInit(): void {
+    const token = this._authService.getToken() || '';
+    const isValidToken = this._authService.isTokenValid(token);
+    if (isValidToken) {
+      this._router.navigate(['']);
+    }
+
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],

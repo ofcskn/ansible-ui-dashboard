@@ -21,6 +21,18 @@ export class AuthService {
     return null;
   }
 
+  isTokenValid(token: string): boolean {
+    try {
+      const decoded: any = jwtDecode(token);
+      if (!decoded.exp) return false; // no expiry claim
+
+      const now = Date.now().valueOf() / 1000; // seconds since epoch
+      return decoded.exp > now; // token expiration check
+    } catch (error) {
+      return false; // invalid token format
+    }
+  }
+
   setToken(token: string): void {
     if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.setItem(this.tokenKey, token);

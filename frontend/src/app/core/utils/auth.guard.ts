@@ -17,8 +17,8 @@ export class AuthGuard implements CanActivate {
     state: RouterStateSnapshot
   ): boolean {
     const token = this._authService.getToken() || '';
-    if (token == null || this.isTokenValid(token) == false) {
-      this.router.navigate(['/users/login'], {
+    if (token == null || this._authService.isTokenValid(token) == false) {
+      this.router.navigate(['/auth/login'], {
         queryParams: { returnUrl: state.url },
       });
       return false;
@@ -31,17 +31,5 @@ export class AuthGuard implements CanActivate {
     }
 
     return true;
-  }
-
-  private isTokenValid(token: string): boolean {
-    try {
-      const decoded: any = jwtDecode(token);
-      if (!decoded.exp) return false; // no expiry claim
-
-      const now = Date.now().valueOf() / 1000; // seconds since epoch
-      return decoded.exp > now; // token expiration check
-    } catch (error) {
-      return false; // invalid token format
-    }
   }
 }

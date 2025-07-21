@@ -1,3 +1,36 @@
-<div class="container mt-5">
-  <router-outlet />
+<div class="container-fluid main-container">
+  <!-- Header -->
+  <header class="container">
+    <mat-toolbar color="primary" class="main-toolbar">
+      <button mat-icon-button aria-label="Menu" class="toolbar-icon">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <span class="app-title">Ansible UI Dashboard</span>
+
+      <span class="flex-spacer"></span>
+
+      <button
+        mat-icon-button
+        (click)="goTo('/playbooks')"
+        aria-label="Playbooks"
+        class="toolbar-icon"
+      >
+        <mat-icon>book</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="logout()"
+        aria-label="Log out"
+        class="toolbar-icon"
+      >
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container main-content">
+    <router-outlet></router-outlet>
+  </main>
 </div>

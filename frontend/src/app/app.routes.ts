@@ -17,6 +17,14 @@ export const routes: Routes = [
       import('./features/users/users-routing-module').then(
         (m) => m.UsersRoutingModule
       ),
+    canActivate: [AuthGuard],
+  },
+  {
+    path: 'auth',
+    loadChildren: () =>
+      import('./features/auth/auth-routing-module').then(
+        (m) => m.AuthRoutingModule
+      ),
   },
   { path: '', redirectTo: 'playbooks', pathMatch: 'full' },
 ];

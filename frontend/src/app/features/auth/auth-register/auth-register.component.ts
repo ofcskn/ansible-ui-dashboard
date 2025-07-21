@@ -16,7 +16,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-user-register',
+  selector: 'app-auth-register',
   imports: [
     CommonModule,
     FormsModule,
@@ -26,10 +26,10 @@ import { AuthService } from '../../../core/services/auth.service';
     MatButtonModule,
     MatCardModule,
   ],
-  templateUrl: './user-register.component.html',
-  styleUrl: './user-register.component.scss',
+  templateUrl: './auth-register.component.html',
+  styleUrl: './auth-register.component.scss',
 })
-export class UserRegisterComponent {
+export class AuthRegisterComponent {
   registerForm!: FormGroup;
   errorMessage?: string | null;
 
@@ -63,7 +63,7 @@ export class UserRegisterComponent {
       };
       this._authService.register(newUser).subscribe({
         next: (response) => {
-          this.router.navigate(['/users/login']);
+          this.router.navigate(['/auth/login']);
         },
         error: (error) => {
           const backendMessage =
