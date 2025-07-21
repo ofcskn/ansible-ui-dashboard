@@ -2,6 +2,8 @@ from app.schemas.api_response_schema import APIResponseSchema
 from app.services.user_service import UserService
 from app.models.user import UserModel
 from app.decorators.auth_decorator import role_required
+from app.helpers.validators import EmailValidator, PasswordMatchValidator, PasswordValidator, UsernameValidator
+from app.services.validation_service import ValidationService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify, Blueprint, request
 
@@ -21,6 +23,50 @@ def get_current_user():
     user_id = get_jwt_identity()
     user = UserModel.query.get(user_id)
     return jsonify(user.to_dict()), 200
+
+@users_bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json() or {}
+    name = data.get("name")
+    email = data.get("email")
+    username = data.get("username")
+    password = data.get("password")
+    confirmPassword = data.get("confirmPassword")
+
+    required_fields = ["name", "email", "username", "password", "confirmPassword"]
+    if not all(data.get(field) for field in required_fields):
+        return APIResponseSchema(
+            success=False,
+            message="Missing required fields.",
+            code=400
+        ).to_json()
+    
+    if password != confirmPassword:
+           return APIResponseSchema(
+            success=False,
+            message="Passwords are not matching!",
+            code=400
+        ).to_json()
+    
+    validators = [
+        UsernameValidator(),
+        PasswordValidator(),
+        EmailValidator(),
+        PasswordMatchValidator(),
+    ]
+    validation_service = ValidationService(validators)
+
+    is_valid, message = validation_service.validate(data)
+    if not is_valid:
+        return APIResponseSchema(success=False, message=message, code=400).to_json()
+
+    try:
+        status, message, user = service.add_user(name=name, email=email, username=username, password=password)
+        if not status:
+            return APIResponseSchema(success=status, message=message, code=400).to_json()
+        return APIResponseSchema(success=status, message=message, data=user.to_dict(), code=200).to_json()
+    except Exception as e:
+        return APIResponseSchema(success=False, message=f"A server error is occured {e}.", code=500).to_json()
 
 @users_bp.route("/add", methods=["POST"])
 @role_required("admin")
@@ -42,8 +88,9 @@ def add_user():
         ).to_json()
 
     try:
-        user = service.add_user(name=name, email=email, username=username, password=password)
-        return APIResponseSchema(success=True, message="User is added", data=user.to_dict, code=200).to_json()
+        status, message, user = service.add_user(name=name, email=email, username=username, password=password)
+        if not status:
+            return APIResponseSchema(success=status, message=message, code=400).to_json()
+        return APIResponseSchema(success=status, message=message, data=user, code=200).to_json()
     except Exception as e:
-        print(e)
         return APIResponseSchema(success=False, message=f"A server error is occured {e}.", code=500).to_json()

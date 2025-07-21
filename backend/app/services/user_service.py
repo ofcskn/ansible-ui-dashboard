@@ -19,8 +19,15 @@ class UserService:
 
     def add_user(self, name, email, username, password, role="user"):
         user = UserModel(name=name, email=email, username=username, role=role)
+        if self.get_user_by_username(user.username):
+            return False, "Username already taken.", None
+
+        if self.get_user_by_email(user.email):
+            return False, "Email already registered.", None
+        
         user.set_password(password)
-        return self.repo.add(user)
+        self.repo.add(user)
+        return True, "User is added",user
 
     def delete_user(self, user):
         if user:
