@@ -8,3 +8,4 @@ pyyaml
 redis
 flask-socketio
 eventlet
+flask_jwt_extended
