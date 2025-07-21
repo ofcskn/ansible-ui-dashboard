@@ -41,13 +41,6 @@ def register():
             code=400
         ).to_json()
     
-    if password != confirmPassword:
-           return APIResponseSchema(
-            success=False,
-            message="Passwords are not matching!",
-            code=400
-        ).to_json()
-    
     validators = [
         UsernameValidator(),
         PasswordValidator(),
