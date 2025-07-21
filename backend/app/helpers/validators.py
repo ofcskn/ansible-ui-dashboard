@@ -30,3 +30,12 @@ class PasswordMatchValidator(Validator):
         if data.get("password") != data.get("confirmPassword"):
             return False, "Passwords are not matching!"
         return True, ""
+
+class RequiredFieldsValidator(Validator):
+    def __init__(self, required_fields):
+        self.required_fields = required_fields
+
+    def validate(self, data):
+        if not all(data.get(field) for field in self.required_fields):
+            return False, "Missing required fields."
+        return True, ""

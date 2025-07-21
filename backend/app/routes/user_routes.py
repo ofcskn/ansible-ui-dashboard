@@ -2,7 +2,7 @@ from app.schemas.api_response_schema import APIResponseSchema
 from app.services.user_service import UserService
 from app.models.user import UserModel
 from app.decorators.auth_decorator import role_required
-from app.helpers.validators import EmailValidator, PasswordMatchValidator, PasswordValidator, UsernameValidator
+from app.helpers.validators import EmailValidator, PasswordMatchValidator, PasswordValidator, RequiredFieldsValidator, UsernameValidator
 from app.services.validation_service import ValidationService
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import jsonify, Blueprint, request
@@ -34,14 +34,8 @@ def register():
     confirmPassword = data.get("confirmPassword")
 
     required_fields = ["name", "email", "username", "password", "confirmPassword"]
-    if not all(data.get(field) for field in required_fields):
-        return APIResponseSchema(
-            success=False,
-            message="Missing required fields.",
-            code=400
-        ).to_json()
-    
     validators = [
+        RequiredFieldsValidator(required_fields),
         UsernameValidator(),
         PasswordValidator(),
         EmailValidator(),
