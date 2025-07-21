@@ -4,21 +4,27 @@ from app.schemas.api_response_schema import APIResponseSchema
 from app.services.playbook_service import PlaybookService
 from app.helpers.yaml_helpers import is_valid_yaml, remove_old_playbook_file, remove_playbook_file, save_playbook_file
 from app.constants import PLAYBOOKS_DIR
+from app.decorators import auth_decorator
 from flask import Blueprint, jsonify, request
 from app.extensions import redis_client, socketio
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 playbooks_bp = Blueprint("playbooks", __name__, url_prefix="/playbooks")
 service = PlaybookService()
 
 @playbooks_bp.route("/list", methods=["GET"])
+@jwt_required()
 def fetch_playbooks():
-    playbooks = service.list_playbooks()
+    user_id = int(get_jwt_identity())
+    playbooks = service.fetch_by_user_id(user_id)
     playbooks_data = [playbook.to_dict() for playbook in playbooks]
     response = APIResponseSchema(success=True, message="Playbooks are fetched", data=playbooks_data, code=200)
     return jsonify(response.to_dict())
 
 @playbooks_bp.route("/get/<int:id>", methods=["GET"])
+@jwt_required()
 def get_playbook(id):
+    user_id = int(get_jwt_identity())
     playbook = service.get_by_id(id)
     if not playbook:
         response = APIResponseSchema(success=False, message="Playbook is not found.", code=404)
@@ -26,7 +32,9 @@ def get_playbook(id):
     return jsonify(response.to_dict())
 
 @playbooks_bp.route("/run", methods=["POST"])
+@jwt_required()
 def execute_playbook():
+    user_id = int(get_jwt_identity())
     data = request.get_json() or {}
     playbook_id = data.get("playbook_id")
     extra_vars = data.get("params", {})
@@ -37,6 +45,9 @@ def execute_playbook():
     playbook = service.get_by_id(playbook_id)
     if not playbook:
         return jsonify(APIResponseSchema(False, "Playbook not found", 404).to_dict()), 404
+    
+    if playbook.user_id != user_id:
+        return jsonify(APIResponseSchema(False, "No permission to run.", 400).to_dict()), 300
 
     lock_key = f"playbook:{playbook.id}:running"
     lock_acquired = redis_client.set(lock_key, "running", nx=True, ex=1800)
@@ -63,7 +74,9 @@ def execute_playbook():
     return jsonify(APIResponseSchema(True, "Playbook is running", code=202).to_dict())
 
 @playbooks_bp.route("/manage", methods=["POST"])
+@jwt_required()
 def manage_playbook():
+    user_id = int(get_jwt_identity())
     data = request.get_json() or {}
     playbook_id = data.get("id")
     name = data.get("name")
@@ -88,7 +101,7 @@ def manage_playbook():
             response = APIResponseSchema(success=False, message=error, code=500)
             return jsonify(response.to_dict()), 500
 
-        new_playbook = service.add_playbook(name=name, description=description, filepath=filepath)
+        new_playbook = service.add_playbook(name=name, description=description, filepath=filepath, user_id=user_id)
         response = APIResponseSchema(success=True, message="Playbook added successfully", data=new_playbook.to_dict(), code=201)
         return jsonify(response.to_dict()), 201
 
@@ -117,11 +130,16 @@ def manage_playbook():
         return jsonify(response.to_dict()), 200
 
 @playbooks_bp.route("/yaml/get/<int:id>", methods=["GET"])
+@jwt_required()
 def get_content_of_file(id):
+    user_id = int(get_jwt_identity())
     playbook = service.get_by_id(id)
     if not playbook:
         response = APIResponseSchema(success=False, message="Playbook not found", code=404)
         return jsonify(response.to_dict()), 200
+    
+    if playbook.user_id != user_id:
+        return jsonify(APIResponseSchema(False, "No permission to get the content.", 400).to_dict()), 300
 
     full_path = os.path.join(PLAYBOOKS_DIR, playbook.filepath)
     yaml_content = ""
@@ -135,7 +153,9 @@ def get_content_of_file(id):
     return jsonify(response.to_dict()), 200
 
 @playbooks_bp.route("/delete", methods=["DELETE"])
+@jwt_required()
 def delete_playbook():
+    user_id = int(get_jwt_identity())
     data = request.get_json() or {}
     playbook_id = data.get("id")
 
@@ -147,8 +167,9 @@ def delete_playbook():
     if not playbook:
         response = APIResponseSchema(success=False, message="Playbook not found", code=404)
         return jsonify(response.to_dict()), 404
-
-    # TODO: Add admin role verification here
+    
+    if playbook.user_id != user_id:
+        return jsonify(APIResponseSchema(False, "No permission to get the content.", 400).to_dict()), 300
 
     # Delete the playbook file from disk
     filepath = playbook.filepath

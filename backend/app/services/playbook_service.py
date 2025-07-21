@@ -1,6 +1,7 @@
 import os
 import subprocess
 import json
+from typing import List
 from app.models.playbook import PlaybookModel
 from app.repositories.playbook_repository import PlaybookRepository
 from app.constants import PLAYBOOKS_DIR
@@ -11,17 +12,29 @@ class PlaybookService:
         self.playbook_dir = playbook_dir
         self.repo = PlaybookRepository()
 
-    def list_playbooks(self):
+    def fetch_all(self) -> List[PlaybookModel]:
         return self.repo.get_all()
 
-    def get_playbook(self, name) -> PlaybookModel:
-        return self.repo.get_by_name(name)
-    
+    def fetch_by_user_id(self, user_id: int) -> List[PlaybookModel]:
+        return self.repo.filter_by_user_id(user_id)
+
+    def fetch_by_name(self, name: str) -> List[PlaybookModel]:
+        return self.repo.filter_by_name(name)
+
+    def fetch_by_filepath(self, filepath: str) -> List[PlaybookModel]:
+        return self.repo.filter_by_filepath(filepath)
+
+    def fetch_by_is_active(self, is_active: bool) -> List[PlaybookModel]:
+        return self.repo.filter_by_is_active(is_active)
+
+    def get_by_filepath(self, filepath) -> PlaybookModel:
+        return self.repo.get_by_filepath(filepath)
+
     def get_by_id(self, id) -> PlaybookModel:
         return self.repo.get_by_id(id)
 
-    def add_playbook(self, name, description, filepath):
-        playbook = PlaybookModel(name=name, description=description, filepath=filepath)
+    def add_playbook(self, name, description, filepath, user_id):
+        playbook = PlaybookModel(name=name, description=description, filepath=filepath, user_id=user_id)
         return self.repo.add(playbook)
 
     def delete_playbook(self, playbook):

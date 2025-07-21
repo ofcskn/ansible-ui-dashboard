@@ -2,9 +2,9 @@ from app.schemas.api_response_schema import APIResponseSchema
 from app.services.user_service import UserService
 from app.models.user import UserModel
 from app.decorators.auth_decorator import role_required
-from app.helpers.validators import EmailValidator, PasswordMatchValidator, PasswordValidator, RequiredFieldsValidator, UsernameValidator
+from app.helpers.validators import EmailValidator, PasswordMatchValidator, PasswordValidator, RequiredFieldsValidator, UserLoginValidator, UsernameValidator
 from app.services.validation_service import ValidationService
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity,create_access_token
 from flask import jsonify, Blueprint, request
 
 users_bp = Blueprint("users", __name__, url_prefix="/users")
@@ -31,7 +31,6 @@ def register():
     email = data.get("email")
     username = data.get("username")
     password = data.get("password")
-    confirmPassword = data.get("confirmPassword")
 
     required_fields = ["name", "email", "username", "password", "confirmPassword"]
     validators = [
@@ -54,6 +53,30 @@ def register():
         return APIResponseSchema(success=status, message=message, data=user.to_dict(), code=200).to_json()
     except Exception as e:
         return APIResponseSchema(success=False, message=f"A server error is occured {e}.", code=500).to_json()
+    
+@users_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json() or {}
+    handle = data.get("handle")
+    password = data.get("password")
+
+    try:
+        success, message, user = service.login(handle, password)
+        if not success:
+            return APIResponseSchema(success=False, message=message, code=400).to_json()
+        
+        token = create_access_token(identity=str(user.id), additional_claims = {
+        "role": user.role,
+        "email": user.email,
+        "username": user.username,
+        "name": user.name,
+    })
+        return APIResponseSchema(success=True, message=message, code=200, data={
+            "token": token,
+            "user": user.to_dict()
+        }).to_json()
+    except Exception as e:
+        return APIResponseSchema(success=False, message=f"Server error: {e}", code=500).to_json()
 
 @users_bp.route("/add", methods=["POST"])
 @role_required("admin")
