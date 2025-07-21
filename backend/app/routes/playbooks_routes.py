@@ -70,6 +70,13 @@ def manage_playbook():
     description = data.get("description")
     filepath = data.get("filepath")
     content = data.get("content")  # YAML content as string
+
+    if filepath and content:
+        is_valid, error = is_valid_yaml(filepath, content)
+        if not is_valid:
+            response = APIResponseSchema(success=False, message=error, code=400)
+            return jsonify(response.to_dict()), 400
+
     if not playbook_id:
         # Adding new requires name, description, filepath and content
         if not name or not description or not filepath or not content:
@@ -96,12 +103,6 @@ def manage_playbook():
             playbook.name = name
         if description:
             playbook.description = description
-
-        if filepath and content:
-            is_valid, error = is_valid_yaml(filepath, content)
-            if not is_valid:
-                response = APIResponseSchema(success=False, message=error, code=400)
-                return jsonify(response.to_dict()), 400
             
             remove_old_playbook_file(old_filepath,filepath)
 
