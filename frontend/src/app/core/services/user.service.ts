@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { User } from '../models/user.model';
+import { User, UserRegister } from '../models/user.model';
 import { ApiResponse } from '../models/api-response.model';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -15,8 +15,9 @@ export class UserService {
     return this.http.get<{ data: User }>(`${this.baseUrl}/get/${id}`);
   }
 
-  register(user: User): Observable<any> {
-    return this.http.post(`${this.baseUrl}/register`, user);
+  register(user: UserRegister): Observable<any> {
+    const payload = { ...user };
+    return this.http.post(`${this.baseUrl}/register`, payload);
   }
 
   login(handle: string, password: string): Observable<any> {

@@ -8,10 +8,10 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-user-list',
   imports: [CommonModule, MatTableModule],
-  templateUrl: './user-list.html',
-  styleUrl: './user-list.scss',
+  templateUrl: './user-list.component.html',
+  styleUrl: './user-list.component.scss',
 })
-export class UserList {
+export class UserListComponent {
   displayedColumns: string[] = [
     'id',
     'name',
