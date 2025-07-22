@@ -4,11 +4,11 @@ import json
 from typing import List
 from app.models.playbook import PlaybookModel
 from app.repositories.playbook_repository import PlaybookRepository
-from app.constants import PLAYBOOKS_DIR
 from app.extensions import redis_client
+from app.config import Config
 
 class PlaybookService:
-    def __init__(self, playbook_dir=PLAYBOOKS_DIR):
+    def __init__(self, playbook_dir=Config.PLAYBOOKS_DIR):
         self.playbook_dir = playbook_dir
         self.repo = PlaybookRepository()
 

@@ -3,8 +3,7 @@ from threading import Thread
 from app.schemas.api_response_schema import APIResponseSchema
 from app.services.playbook_service import PlaybookService
 from app.helpers.yaml_helpers import is_valid_yaml, remove_old_playbook_file, remove_playbook_file, save_playbook_file
-from app.constants import PLAYBOOKS_DIR
-from app.decorators import auth_decorator
+from app.config import Config
 from flask import Blueprint, jsonify, request
 from app.extensions import redis_client, socketio
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -141,7 +140,7 @@ def get_content_of_file(id):
     if playbook.user_id != user_id:
         return jsonify(APIResponseSchema(False, "No permission to get the content.", 400).to_dict()), 300
 
-    full_path = os.path.join(PLAYBOOKS_DIR, playbook.filepath)
+    full_path = os.path.join(Config.PLAYBOOKS_DIR, playbook.filepath)
     yaml_content = ""
     try:
         with open(full_path, 'r', encoding='utf-8') as f:

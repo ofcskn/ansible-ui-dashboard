@@ -1,14 +1,15 @@
 import os
 
 from yaml import YAMLError, safe_load
-from app.constants import PLAYBOOKS_DIR
 import yaml
 from yaml import YAMLError
+
+from app.config import Config
 
 def save_playbook_file(rel_path, yaml_content):
     if not yaml_content:
         return False, "Playbook content missing"
-    full_path = os.path.join(PLAYBOOKS_DIR, rel_path)
+    full_path = os.path.join(Config.PLAYBOOKS_DIR, rel_path)
     os.makedirs(os.path.dirname(full_path), exist_ok=True)
     with open(full_path, "w", encoding="utf-8") as f:
         f.write(yaml_content)
@@ -16,7 +17,7 @@ def save_playbook_file(rel_path, yaml_content):
 
 def remove_playbook_file(filepath):
     if filepath:
-        full_path = os.path.join(PLAYBOOKS_DIR, filepath)
+        full_path = os.path.join(Config.PLAYBOOKS_DIR, filepath)
         try:
             if os.path.exists(full_path):
                 os.remove(full_path)
@@ -43,8 +44,8 @@ def is_valid_yaml(filepath: str, content: str) -> tuple[bool, str]:
     return True, "YAML is valid and safe"
 
 def remove_old_playbook_file(old_rel_path: str, new_rel_path: str):
-    old_full_path = os.path.join(PLAYBOOKS_DIR, old_rel_path)
-    new_full_path = os.path.join(PLAYBOOKS_DIR, new_rel_path)
+    old_full_path = os.path.join(Config.PLAYBOOKS_DIR, old_rel_path)
+    new_full_path = os.path.join(Config.PLAYBOOKS_DIR, new_rel_path)
 
     if new_full_path != old_full_path and os.path.exists(old_full_path):
         try:
