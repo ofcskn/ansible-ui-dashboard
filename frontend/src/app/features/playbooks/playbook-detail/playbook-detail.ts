@@ -72,8 +72,8 @@ export class PlaybookDetail implements OnInit {
 
               this.cdr.detectChanges();
             },
-            error: () => {
-              this.errorMessage = 'Playbook content could not be loaded.';
+            error: (error) => {
+              this.errorMessage = error.error.message;
               this.loading = false;
               this.cdr.detectChanges();
             },
@@ -84,8 +84,8 @@ export class PlaybookDetail implements OnInit {
           this.cdr.detectChanges();
         }
       },
-      error: () => {
-        this.errorMessage = 'Failed to load playbook.';
+      error: (error) => {
+        this.errorMessage = error.error.message;
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -105,8 +105,8 @@ export class PlaybookDetail implements OnInit {
     if (this.isNew) {
       this.playbookService.create(this.playbook).subscribe({
         next: () => this.router.navigate(['/playbooks']),
-        error: () => {
-          this.errorMessage = 'Failed to create playbook';
+        error: (error) => {
+          this.errorMessage = error.error.message;
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -114,8 +114,8 @@ export class PlaybookDetail implements OnInit {
     } else if (this.playbookId) {
       this.playbookService.update(this.playbookId, this.playbook).subscribe({
         next: () => this.router.navigate(['/playbooks']),
-        error: () => {
-          this.errorMessage = 'Failed to update playbook';
+        error: (error) => {
+          this.errorMessage = error.error.message;
           this.loading = false;
           this.cdr.detectChanges();
         },
