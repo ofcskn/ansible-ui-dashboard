@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -29,27 +29,25 @@ import { Router } from '@angular/router';
   templateUrl: './auth-login.component.html',
   styleUrl: './auth-login.component.scss',
 })
-export class AuthLoginComponent {
+export class AuthLoginComponent implements OnInit {
   loginForm!: FormGroup;
 
   constructor(
     private fb: FormBuilder,
     private _authService: AuthService,
     private _router: Router
-  ) {}
-
-  ngOnInit(): void {
-    const token = this._authService.getToken() || '';
-    const isValidToken = this._authService.isTokenValid(token);
-    if (isValidToken) {
-      this._router.navigate(['']);
-    }
-
+  ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
-      rememberMe: [false],
     });
+  }
+
+  async ngOnInit(): Promise<void> {
+    const isValidToken = await this._authService.isTokenValid();
+    if (isValidToken) {
+      this._router.navigate(['']);
+    }
   }
 
   onSubmit() {
