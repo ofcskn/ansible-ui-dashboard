@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserLoginDTO } from '../models/dto/userLoginDTO.model';
@@ -11,6 +11,8 @@ import { ApiResponse } from '../models/api-response.model';
 export class AuthService {
   private tokenKey = 'auth_token';
   private baseUrl = `${environment.API_URL}/users`;
+  private _isLoggedIn = signal(false);
+  readonly isLoggedIn = computed(() => this._isLoggedIn());
 
   constructor(private http: HttpClient) {}
 
@@ -52,6 +54,7 @@ export class AuthService {
       .pipe(
         tap((response) => {
           this.setToken(response.data.token);
+          this._isLoggedIn.set(true);
         })
       );
   }
@@ -81,5 +84,6 @@ export class AuthService {
 
   logout() {
     this.removeToken();
+    this._isLoggedIn.set(false);
   }
 }

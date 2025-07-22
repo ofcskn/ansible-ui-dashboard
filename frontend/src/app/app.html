@@ -18,14 +18,16 @@
       >
         <mat-icon>book</mat-icon>
       </button>
-      <button
-        mat-icon-button
-        (click)="logout()"
-        aria-label="Log out"
-        class="toolbar-icon"
-      >
-        <mat-icon>logout</mat-icon>
-      </button>
+      <ng-container class="authorized-buttons" *ngIf="isLoggedIn()">
+        <button
+          mat-icon-button
+          (click)="logout()"
+          aria-label="Log out"
+          class="toolbar-icon"
+        >
+          <mat-icon>logout</mat-icon>
+        </button>
+      </ng-container>
     </mat-toolbar>
   </header>
 
