@@ -5,25 +5,28 @@ import {
   HttpEvent,
   HttpInterceptor,
 } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { from, Observable, switchMap } from 'rxjs';
+import { TokenStorageService } from '../services/token-storage.service';
 
 @Injectable()
 export class JwtInterceptor implements HttpInterceptor {
-  constructor(private _authService: AuthService) {}
+  constructor(private _tokenStorageService: TokenStorageService) {}
 
   intercept(
     request: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    const token = this._authService.getToken();
-    if (token) {
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-    }
-    return next.handle(request);
+    return from(this._tokenStorageService.getToken()).pipe(
+      switchMap((token) => {
+        if (token) {
+          request = request.clone({
+            setHeaders: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        }
+        return next.handle(request);
+      })
+    );
   }
 }

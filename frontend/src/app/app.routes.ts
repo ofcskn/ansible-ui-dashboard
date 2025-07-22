@@ -17,6 +17,7 @@ export const routes: Routes = [
       import('./features/users/users-routing-module').then(
         (m) => m.UsersRoutingModule
       ),
+    data: { roles: ['admin'] },
     canActivate: [AuthGuard],
   },
   {

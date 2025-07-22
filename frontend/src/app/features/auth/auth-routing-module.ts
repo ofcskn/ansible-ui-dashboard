@@ -4,6 +4,11 @@ import { AuthLoginComponent } from './auth-login/auth-login.component';
 import { AuthRegisterComponent } from './auth-register/auth-register.component';
 
 const routes: Routes = [
+  {
+    path: '',
+    redirectTo: 'register',
+    pathMatch: 'full',
+  },
   { path: 'login', component: AuthLoginComponent },
   { path: 'register', component: AuthRegisterComponent },
 ];
