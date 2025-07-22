@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 from app.routes.playbooks_routes import playbooks_bp
 from app.routes.user_routes import users_bp
-from .extensions import db, migrate, socketio
+from app.extensions import db, migrate, socketio
 from flask_jwt_extended import JWTManager
 
 def create_app():

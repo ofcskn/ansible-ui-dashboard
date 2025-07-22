@@ -3,6 +3,7 @@ from app.models.user import UserModel
 from app.repositories.user_repository import UserRepository
 from app.helpers.validators import RequiredFieldsValidator, UserLoginValidator
 from app.services.validation_service import ValidationService
+from app.utils.socket import call_userenvd
 from werkzeug.security import check_password_hash
 
 class UserService:
@@ -31,6 +32,12 @@ class UserService:
         
         user.set_password(password)
         self.repo.add(user)
+        
+        # Ask daemon to create isolated env
+        result, message = call_userenvd(username)
+        if not result:
+            return False, message, None
+
         return True, "User is added",user
     
     def login(self, handle: str, password: str) -> Tuple[bool, str, Optional[UserModel]]:

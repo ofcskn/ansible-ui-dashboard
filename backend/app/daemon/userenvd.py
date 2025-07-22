@@ -1,0 +1,147 @@
+#!/usr/bin/env python3
+import os
+import socket
+import json
+import logging
+import subprocess
+import stat
+import traceback
+
+from app.config import Config
+
+SOCKET_PATH=Config.RAW_SOCKET_PATH
+USER_WORKSPACE_DIR=Config.USER_WORKSPACE_DIR
+LOG_FILE = "/var/log/userenvd.log"
+
+os.chmod(SOCKET_PATH, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)  # 660
+
+def setup_logging():
+    logging.basicConfig(
+        filename=LOG_FILE,
+        level=logging.DEBUG,
+        format='%(asctime)s %(levelname)s: %(message)s',
+    )
+    logging.info("userenvd starting...")
+
+
+def create_user_environment(username):
+    user_path = os.path.join(USER_WORKSPACE_DIR, username)
+    try:
+        logging.info(f"Creating environment for user '{username}' at {user_path}")
+
+        # Create base directory
+        os.makedirs(user_path, exist_ok=True)
+
+        # Create subdirectories
+        for subdir in ["playbooks", "inventories", "logs"]:
+            path = os.path.join(user_path, subdir)
+            os.makedirs(path, exist_ok=True)
+
+        # Create system user if not exists (no error if exists)
+        subprocess.run(
+            ["useradd", "-M", "-r", "-s", "/usr/sbin/nologin", username],
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        # Set ownership recursively
+        subprocess.run(
+            ["chown", "-R", f"{username}:{username}", user_path],
+            check=True,
+        )
+
+        # Set permissions
+        subprocess.run(
+            ["chmod", "-R", "700", user_path],
+            check=True,
+        )
+
+        logging.info(f"Environment for user '{username}' created successfully.")
+        return {"status": "ok", "path": user_path}
+
+    except subprocess.CalledProcessError as e:
+        err_msg = f"Subprocess failed: {e}"
+        logging.error(err_msg)
+        logging.error(traceback.format_exc())
+        return {"status": "error", "message": err_msg}
+
+    except Exception as e:
+        err_msg = f"Exception while creating environment: {e}"
+        logging.error(err_msg)
+        logging.error(traceback.format_exc())
+        return {"status": "error", "message": err_msg}
+
+
+def handle_request(raw_data):
+    try:
+        data = json.loads(raw_data)
+        username = data.get("username")
+        if not username:
+            return {"status": "error", "message": "Missing 'username' in request"}
+
+        # Sanitize username (basic)
+        if not username.isalnum():
+            return {"status": "error", "message": "Username must be alphanumeric"}
+
+        return create_user_environment(username)
+
+    except json.JSONDecodeError:
+        logging.error("Invalid JSON received")
+        return {"status": "error", "message": "Invalid JSON"}
+
+    except Exception as e:
+        logging.error(f"Unhandled exception: {e}")
+        logging.error(traceback.format_exc())
+        return {"status": "error", "message": str(e)}
+
+
+def main():
+    # Remove stale socket
+    if os.path.exists(SOCKET_PATH):
+        os.remove(SOCKET_PATH)
+
+    # Create socket directory with correct permissions if needed
+    socket_dir = os.path.dirname(SOCKET_PATH)
+    if not os.path.exists(socket_dir):
+        os.makedirs(socket_dir, exist_ok=True)
+    os.chmod(socket_dir, 0o770)  # Owner+group rwx
+
+    setup_logging()
+
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(SOCKET_PATH)
+    os.chmod(SOCKET_PATH, 0o660)  # Owner+group rw
+
+    # Log socket info
+    st = os.stat(SOCKET_PATH)
+    logging.info(f"Socket {SOCKET_PATH} created with permissions {oct(st.st_mode)}")
+
+    server.listen()
+    logging.info("userenvd listening for connections...")
+
+    try:
+        while True:
+            conn, _ = server.accept()
+            with conn:
+                data = conn.recv(4096)
+                if not data:
+                    continue
+                response = handle_request(data.decode("utf-8"))
+                conn.send(json.dumps(response).encode("utf-8"))
+
+    except KeyboardInterrupt:
+        logging.info("userenvd shutting down (KeyboardInterrupt)")
+
+    except Exception as e:
+        logging.error(f"userenvd fatal error: {e}")
+        logging.error(traceback.format_exc())
+
+    finally:
+        if os.path.exists(SOCKET_PATH):
+            os.remove(SOCKET_PATH)
+        logging.info("userenvd stopped.")
+
+
+if __name__ == "__main__":
+    main()
