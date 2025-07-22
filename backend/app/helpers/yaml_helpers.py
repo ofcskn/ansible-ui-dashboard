@@ -2,6 +2,8 @@ import os
 
 from yaml import YAMLError, safe_load
 from app.constants import PLAYBOOKS_DIR
+import yaml
+from yaml import YAMLError
 
 def save_playbook_file(rel_path, yaml_content):
     if not yaml_content:
@@ -23,15 +25,22 @@ def remove_playbook_file(filepath):
             return {"success": False, "code": 500, "error": e}
 
 def is_valid_yaml(filepath: str, content: str) -> tuple[bool, str]:
-    if not filepath.endswith(".yaml") and not filepath.endswith(".yml"):
+    # Check file extension
+    if not filepath.endswith((".yaml", ".yml")):
         return False, "Filepath must end with .yaml or .yml"
 
     try:
-        safe_load(content)
+        # Try to parse the YAML safely (no object constructors)
+        parsed = yaml.safe_load(content)
+
+        # Enforce basic structure like dict or list
+        if not isinstance(parsed, (dict, list)):
+            return False, "YAML must be a dictionary or list at the top level"
+
     except YAMLError as e:
         return False, f"Invalid YAML content: {str(e)}"
 
-    return True, ""
+    return True, "YAML is valid and safe"
 
 def remove_old_playbook_file(old_rel_path: str, new_rel_path: str):
     old_full_path = os.path.join(PLAYBOOKS_DIR, old_rel_path)

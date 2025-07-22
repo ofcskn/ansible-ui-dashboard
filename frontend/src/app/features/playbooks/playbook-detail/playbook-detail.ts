@@ -28,9 +28,9 @@ export class PlaybookDetail implements OnInit {
     content: '',
   };
   loading = false;
-  error: string | null = null;
   isNew = false;
   editorOptions: {} | null = null;
+  errorMessage: string | null = '';
   private playbookId: string | null = null;
 
   constructor(
@@ -58,7 +58,7 @@ export class PlaybookDetail implements OnInit {
 
   loadPlaybook(id: string) {
     this.loading = true;
-    this.error = null;
+    this.errorMessage = null;
 
     this.playbookService.getById(id).subscribe({
       next: (res) => {
@@ -73,19 +73,19 @@ export class PlaybookDetail implements OnInit {
               this.cdr.detectChanges();
             },
             error: () => {
-              this.error = 'Playbook content could not be loaded.';
+              this.errorMessage = 'Playbook content could not be loaded.';
               this.loading = false;
               this.cdr.detectChanges();
             },
           });
         } else {
-          this.error = 'Playbook data is empty.';
+          this.errorMessage = 'Playbook data is empty.';
           this.loading = false;
           this.cdr.detectChanges();
         }
       },
       error: () => {
-        this.error = 'Failed to load playbook.';
+        this.errorMessage = 'Failed to load playbook.';
         this.loading = false;
         this.cdr.detectChanges();
       },
@@ -93,10 +93,10 @@ export class PlaybookDetail implements OnInit {
   }
 
   save() {
-    this.error = null;
+    this.errorMessage = null;
 
     if (!this.playbook.content || this.playbook.content.trim() === '') {
-      this.error = 'YAML content is required';
+      this.errorMessage = 'YAML content is required';
       return;
     }
 
@@ -106,16 +106,18 @@ export class PlaybookDetail implements OnInit {
       this.playbookService.create(this.playbook).subscribe({
         next: () => this.router.navigate(['/playbooks']),
         error: () => {
-          this.error = 'Failed to create playbook';
+          this.errorMessage = 'Failed to create playbook';
           this.loading = false;
+          this.cdr.detectChanges();
         },
       });
     } else if (this.playbookId) {
       this.playbookService.update(this.playbookId, this.playbook).subscribe({
         next: () => this.router.navigate(['/playbooks']),
         error: () => {
-          this.error = 'Failed to update playbook';
+          this.errorMessage = 'Failed to update playbook';
           this.loading = false;
+          this.cdr.detectChanges();
         },
       });
     }

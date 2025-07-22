@@ -1,10 +1,6 @@
 <h1 class="col-sm-12 text-center">Playbook</h1>
 <div *ngIf="loading" class="loading mat-body-1">Loading...</div>
 
-<div *ngIf="error" class="error mat-body-1 text-warn">
-  {{ error }}
-</div>
-
 <form
   (ngSubmit)="save()"
   #playbookForm="ngForm"
@@ -12,6 +8,9 @@
   style="padding: 1rem; max-width: 800px; margin: auto"
 >
   <div class="row">
+    <div *ngIf="errorMessage" class="error-message col-12 alert alert-danger">
+      {{ errorMessage }}
+    </div>
     <!-- Name -->
     <mat-form-field appearance="fill" class="col-sm-12">
       <mat-label>Name</mat-label>
