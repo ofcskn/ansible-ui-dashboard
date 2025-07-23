@@ -4,16 +4,11 @@ import socket
 import json
 import logging
 import subprocess
-import stat
 import traceback
 
-from app.config import Config
-
-SOCKET_PATH=Config.RAW_SOCKET_PATH
-USER_WORKSPACE_ROOT=Config.USER_WORKSPACE_ROOT
+SOCKET_PATH="/var/run/userenvd/socket"
+USER_WORKSPACE_DIR="/opt/users"
 LOG_FILE = "/var/log/userenvd.log"
-
-os.chmod(SOCKET_PATH, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)  # 660
 
 def setup_logging():
     logging.basicConfig(
@@ -25,7 +20,7 @@ def setup_logging():
 
 
 def create_user_environment(username):
-    user_path = os.path.join(USER_WORKSPACE_ROOT, username)
+    user_path = os.path.join(USER_WORKSPACE_DIR, username)
     try:
         logging.info(f"Creating environment for user '{username}' at {user_path}")
 
@@ -107,8 +102,6 @@ def main():
         os.makedirs(socket_dir, exist_ok=True)
     os.chmod(socket_dir, 0o770)  # Owner+group rwx
 
-    setup_logging()
-
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(SOCKET_PATH)
     os.chmod(SOCKET_PATH, 0o660)  # Owner+group rw
@@ -144,4 +137,5 @@ def main():
 
 
 if __name__ == "__main__":
+    setup_logging() 
     main()
