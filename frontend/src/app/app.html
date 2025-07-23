@@ -9,16 +9,23 @@
       <span class="app-title">Ansible UI Dashboard</span>
 
       <span class="flex-spacer"></span>
-
-      <button
-        mat-icon-button
-        (click)="goTo('/playbooks')"
-        aria-label="Playbooks"
-        class="toolbar-icon"
-      >
-        <mat-icon>book</mat-icon>
-      </button>
       <ng-container class="authorized-buttons" *ngIf="isLoggedIn$ | async">
+        <button
+          mat-icon-button
+          (click)="goTo('/playbooks/0')"
+          aria-label="Playbooks Add"
+          class="toolbar-icon"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          (click)="goTo('/playbooks')"
+          aria-label="Playbooks"
+          class="toolbar-icon"
+        >
+          <mat-icon>book</mat-icon>
+        </button>
         <button
           mat-icon-button
           (click)="logout()"
