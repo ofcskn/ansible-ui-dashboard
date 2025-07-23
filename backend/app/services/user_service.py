@@ -4,7 +4,7 @@ from app.repositories.user_repository import UserRepository
 from app.helpers.validators import RequiredFieldsValidator, UserLoginValidator
 from app.services.validation_service import ValidationService
 from app.utils.socket import call_userenvd
-from werkzeug.security import check_password_hash
+from app.utils.utilities import normalize_string
 
 class UserService:
     def __init__(self):
@@ -50,7 +50,7 @@ class UserService:
             return False, message, None
 
         user = UserModel.query.filter(
-            (UserModel.username == handle) | (UserModel.email == handle)
+            (UserModel._username == normalize_string(handle)) | (UserModel._email == normalize_string(handle))
         ).first()
 
         if not user:

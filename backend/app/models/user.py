@@ -1,4 +1,5 @@
 from app.extensions import db
+from app.utils.utilities import normalize_string
 from .base import BaseModel
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import relationship
@@ -24,7 +25,7 @@ class UserModel(BaseModel):
         if value is None:
             self._email = None
         else:
-            self._email = value.strip().lower()
+            self._email = normalize_string(value)
 
     @property
     def username(self):
@@ -35,7 +36,7 @@ class UserModel(BaseModel):
         if value is None:
             self._username = None
         else:
-            self._username = value.strip().lower()
+            self._username = normalize_string(value)
 
     def set_password(self, password: str):
         combined = self.email + password
