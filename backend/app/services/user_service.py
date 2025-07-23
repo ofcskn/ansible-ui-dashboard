@@ -53,7 +53,10 @@ class UserService:
             (UserModel.username == handle) | (UserModel.email == handle)
         ).first()
 
-        if not user or not check_password_hash(user.password_hash, password):
+        if not user:
+            return False, "The user is not found.", None
+        
+        if not user.verify_password(password):
             return False, "Handle or password is not correct.", None
 
         if not user.is_active:

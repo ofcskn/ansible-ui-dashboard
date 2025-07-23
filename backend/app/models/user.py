@@ -7,20 +7,44 @@ class UserModel(BaseModel):
     __tablename__ = "users"
 
     name = db.Column(db.String(32), unique=False, nullable=False)
-    email = db.Column(db.String(256), unique=True, nullable=False)
-    username = db.Column(db.String(256), unique=True, nullable=False)
+    _email = db.Column("email", db.String(256), unique=True, nullable=False)
+    _username = db.Column("username", db.String(256), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), unique=False, nullable=False) 
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     role = db.Column(db.String(32), nullable=False, default="user") 
 
     playbooks = relationship('PlaybookModel', back_populates='user', cascade="all, delete-orphan")
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    @property
+    def email(self):
+        return self._email
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
+    @email.setter
+    def email(self, value):
+        if value is None:
+            self._email = None
+        else:
+            self._email = value.strip().lower()
+
+    @property
+    def username(self):
+        return self._username
+
+    @username.setter
+    def username(self, value):
+        if value is None:
+            self._username = None
+        else:
+            self._username = value.strip().lower()
+
+    def set_password(self, password: str):
+        combined = self.email + password
+        self.password_hash = generate_password_hash(combined)
+
+    def verify_password(self, password: str) -> bool:
+        combined = self.email + password
+        return check_password_hash(self.password_hash, combined)
+        
     def to_dict(self):
         return {
             "id": self.id,
