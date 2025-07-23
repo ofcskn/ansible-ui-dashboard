@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/utils/auth.guard';
+import { UnauthorizedComponent } from './features/shared/unauthorized/unauthorized.component';
+import { NotFoundComponent } from './features/shared/not-found/not-found.component';
 
 export const routes: Routes = [
   {
@@ -28,4 +30,6 @@ export const routes: Routes = [
       ),
   },
   { path: '', redirectTo: 'playbooks', pathMatch: 'full' },
+  { path: 'unauthorized', component: UnauthorizedComponent },
+  { path: '**', component: NotFoundComponent },
 ];
