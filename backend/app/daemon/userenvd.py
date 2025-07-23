@@ -10,7 +10,7 @@ import traceback
 from app.config import Config
 
 SOCKET_PATH=Config.RAW_SOCKET_PATH
-USER_WORKSPACE_DIR=Config.USER_WORKSPACE_DIR
+USER_WORKSPACE_ROOT=Config.USER_WORKSPACE_ROOT
 LOG_FILE = "/var/log/userenvd.log"
 
 os.chmod(SOCKET_PATH, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)  # 660
@@ -25,7 +25,7 @@ def setup_logging():
 
 
 def create_user_environment(username):
-    user_path = os.path.join(USER_WORKSPACE_DIR, username)
+    user_path = os.path.join(USER_WORKSPACE_ROOT, username)
     try:
         logging.info(f"Creating environment for user '{username}' at {user_path}")
 

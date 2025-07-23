@@ -15,5 +15,5 @@ class Config:
     FLASK_PORT=os.getenv("FLASK_PORT", 5000)
     FLASK_HOST=os.getenv("FLASK_HOST", "0.0.0.0")
 
-    USER_WORKSPACE_DIR=os.getenv("USER_WORKSPACE_ROOT", "/opt/users")
+    USER_WORKSPACE_ROOT=os.getenv("USER_WORKSPACE_ROOT", "/opt/users")
     RAW_SOCKET_PATH=os.getenv("OPERATIONS_SOCKET_PATH", "/var/run/userenvd/socket")
