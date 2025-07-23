@@ -31,19 +31,15 @@ class UserService:
             return False, "Email already registered.", None
         
         user.set_password(password)
-        try:            
-            # Call daemon to create environment
-            result, message = call_userenvd(username)
-            if not result:
-                return False, message, None
-
-            self.repo.add(user) 
-            return True, "User is added", user
-
-        except Exception as e:
-            self.repo.rollback()
-            return False, f"Failed to add user: {str(e)}", None
         
+        # Call daemon to create environment
+        result, message = call_userenvd(user.username)
+        if not result:
+            return False, message, None
+
+        self.repo.add(user) 
+        return True, "User is added", user
+
     def login(self, handle: str, password: str) -> Tuple[bool, str, Optional[UserModel]]:
         validators = [
             UserLoginValidator()
