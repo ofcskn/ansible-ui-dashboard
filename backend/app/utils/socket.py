@@ -6,7 +6,7 @@ from app.config import Config
 def call_userenvd(username: str):
     try:
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.connect(Config.RAW_SOCKET_PATH)
+        client.connect(Config.USERENVD_SOCKET_PATH)
         client.send(json.dumps({"username": username}).encode())
         response = client.recv(4096).decode()
         client.close()
