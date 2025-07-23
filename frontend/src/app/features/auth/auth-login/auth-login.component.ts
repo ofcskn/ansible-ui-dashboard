@@ -13,7 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { UserLoginDTO } from '../../../core/models/dto/userLoginDTO.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'auth-user-login',
@@ -35,12 +35,19 @@ export class AuthLoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private _authService: AuthService,
-    private _router: Router
+    private _router: Router,
+    private _route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      handle: ['', [Validators.required]],
       password: ['', Validators.required],
     });
+  }
+
+  redirectAfterLogin() {
+    const returnUrl =
+      this._route.snapshot.queryParamMap.get('returnUrl') || '/';
+    this._router.navigate([returnUrl]);
   }
 
   async ngOnInit(): Promise<void> {
@@ -54,12 +61,12 @@ export class AuthLoginComponent implements OnInit {
     if (this.loginForm.valid) {
       const credentials = this.loginForm.value;
       const loginDTO: UserLoginDTO = {
-        handle: credentials.email,
+        handle: credentials.handle,
         password: credentials.password,
       };
       this._authService.login(loginDTO).subscribe({
         next: (response) => {
-          this._router.navigate(['/playbooks']);
+          this.redirectAfterLogin();
         },
         error: (error) => {
           console.log(error);
