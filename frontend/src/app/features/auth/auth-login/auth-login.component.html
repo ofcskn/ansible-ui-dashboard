@@ -9,18 +9,17 @@
         <div class="row">
           <!-- Email -->
           <mat-form-field appearance="outline" class="col-12">
-            <mat-label>Email</mat-label>
+            <mat-label>Email/Username</mat-label>
             <input
               matInput
-              formControlName="email"
-              type="email"
-              placeholder="Enter your email"
+              formControlName="handle"
+              placeholder="Enter your email or username"
             />
-            <mat-error *ngIf="loginForm.get('email')?.hasError('required')"
+            <mat-error *ngIf="loginForm.get('handle')?.hasError('required')"
               >Email is required</mat-error
             >
-            <mat-error *ngIf="loginForm.get('email')?.hasError('email')"
-              >Enter a valid email</mat-error
+            <mat-error *ngIf="loginForm.get('handle')?.hasError('handle')"
+              >Enter a valid username or email</mat-error
             >
           </mat-form-field>
 
