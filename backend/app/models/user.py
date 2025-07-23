@@ -15,12 +15,14 @@ class UserModel(BaseModel):
 
     playbooks = relationship('PlaybookModel', back_populates='user', cascade="all, delete-orphan")
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    def set_password(self, password: str):
+        combined = self.email + password
+        self.password_hash = generate_password_hash(combined)
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-    
+    def verify_password(self, password: str) -> bool:
+        combined = self.email + password
+        return check_password_hash(self.password_hash, combined)
+        
     def to_dict(self):
         return {
             "id": self.id,
