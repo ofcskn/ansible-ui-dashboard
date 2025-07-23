@@ -1,4 +1,4 @@
-import { Component, NgZone } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
@@ -37,7 +37,8 @@ export class AuthRegisterComponent {
     private fb: FormBuilder,
     private _authService: AuthService,
     private router: Router,
-    private ngZone: NgZone
+    private _ctr: ChangeDetectorRef,
+    private _ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -68,10 +69,10 @@ export class AuthRegisterComponent {
         error: (error) => {
           const backendMessage =
             error.error?.message || 'Registration failed due to unknown error.';
-          this.ngZone.run(() => {
+          this._ngZone.run(() => {
             this.errorMessage = backendMessage;
+            this._ctr.markForCheck();
           });
-          console.log(this.errorMessage);
         },
       });
     }

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -31,12 +31,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class AuthLoginComponent implements OnInit {
   loginForm!: FormGroup;
+  errorMessage?: string | null;
 
   constructor(
     private fb: FormBuilder,
     private _authService: AuthService,
     private _router: Router,
-    private _route: ActivatedRoute
+    private _route: ActivatedRoute,
+    private _ctr: ChangeDetectorRef,
+    private _ngZone: NgZone
   ) {
     this.loginForm = this.fb.group({
       handle: ['', [Validators.required]],
@@ -69,7 +72,12 @@ export class AuthLoginComponent implements OnInit {
           this.redirectAfterLogin();
         },
         error: (error) => {
-          console.log(error);
+          const backendMessage =
+            error.error?.message || 'Login failed due to unknown error.';
+          this._ngZone.run(() => {
+            this.errorMessage = backendMessage;
+            this._ctr.markForCheck();
+          });
         },
       });
     }
