@@ -4,16 +4,19 @@ import socket
 import json
 import logging
 import subprocess
-import stat
 import traceback
+import pwd, grp
+from dotenv import load_dotenv
+load_dotenv()
 
-from app.config import Config
+USERENVD_SOCKET_PATH = os.getenv("USERENVD_SOCKET_PATH", "/var/run/userenvd/socket")
+USERENVD_WORKSPACE_ROOT = os.getenv("USERENVD_WORKSPACE_ROOT", "/opt/users")
 
-SOCKET_PATH=Config.RAW_SOCKET_PATH
-USER_WORKSPACE_ROOT=Config.USER_WORKSPACE_ROOT
-LOG_FILE = "/var/log/userenvd.log"
+PLAYBOOK_MANAGER_USER = os.getenv("PLAYBOOK_MANAGER_USER", "playbookmanager")
+PLAYBOOK_MANAGER_GROUP = os.getenv("PLAYBOOK_MANAGER_GROUP", "playbookmanagergroup")
+LOG_FILE = os.getenv("USERENVD_LOG", f"/home/{PLAYBOOK_MANAGER_USER}/.userenvd/userenvd.log")
 
-os.chmod(SOCKET_PATH, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP)  # 660
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 def setup_logging():
     logging.basicConfig(
@@ -23,9 +26,8 @@ def setup_logging():
     )
     logging.info("userenvd starting...")
 
-
 def create_user_environment(username):
-    user_path = os.path.join(USER_WORKSPACE_ROOT, username)
+    user_path = os.path.join(USERENVD_WORKSPACE_ROOT, username)
     try:
         logging.info(f"Creating environment for user '{username}' at {user_path}")
 
@@ -98,24 +100,28 @@ def handle_request(raw_data):
 
 def main():
     # Remove stale socket
-    if os.path.exists(SOCKET_PATH):
-        os.remove(SOCKET_PATH)
+    if os.path.exists(USERENVD_SOCKET_PATH):
+        os.remove(USERENVD_SOCKET_PATH)
 
     # Create socket directory with correct permissions if needed
-    socket_dir = os.path.dirname(SOCKET_PATH)
+    socket_dir = os.path.dirname(USERENVD_SOCKET_PATH)
     if not os.path.exists(socket_dir):
         os.makedirs(socket_dir, exist_ok=True)
     os.chmod(socket_dir, 0o770)  # Owner+group rwx
 
-    setup_logging()
-
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    server.bind(SOCKET_PATH)
-    os.chmod(SOCKET_PATH, 0o660)  # Owner+group rw
+    server.bind(USERENVD_SOCKET_PATH)
+
+    # Change ownership to the user/group that runs Flask
+    uid = pwd.getpwnam(PLAYBOOK_MANAGER_USER).pw_uid   
+    gid = grp.getgrnam(PLAYBOOK_MANAGER_GROUP).gr_gid 
+
+    os.chown(USERENVD_SOCKET_PATH, uid, gid)
+    os.chmod(USERENVD_SOCKET_PATH, 0o660)  # Owner+group rw
 
     # Log socket info
-    st = os.stat(SOCKET_PATH)
-    logging.info(f"Socket {SOCKET_PATH} created with permissions {oct(st.st_mode)}")
+    st = os.stat(USERENVD_SOCKET_PATH)
+    logging.info(f"Socket {USERENVD_SOCKET_PATH} created with permissions {oct(st.st_mode)}")
 
     server.listen()
     logging.info("userenvd listening for connections...")
@@ -138,10 +144,11 @@ def main():
         logging.error(traceback.format_exc())
 
     finally:
-        if os.path.exists(SOCKET_PATH):
-            os.remove(SOCKET_PATH)
+        if os.path.exists(USERENVD_SOCKET_PATH):
+            os.remove(USERENVD_SOCKET_PATH)
         logging.info("userenvd stopped.")
 
 
 if __name__ == "__main__":
+    setup_logging() 
     main()
